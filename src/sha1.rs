@@ -3,8 +3,7 @@ const K1:u32 = 0x6ED9EBA1;
 const K2:u32 = 0x8F1BBCDC;
 const K3:u32 = 0xCA62C1D6;
 
-
-pub fn sha1(p : &[u8]) -> [u8; 20] {
+fn sha1(p : &[u8]) -> [u8; 20] {
     let (mut h0, mut h1, mut h2, mut h3, mut h4) = (0x67452301u32, 0xEFCDAB89u32, 0x98BADCFEu32, 0x10325476u32, 0xC3D2E1F0u32);
     let len = p.len();
     let mut tmp = [0u8; 64];
@@ -116,12 +115,44 @@ fn putbigu32(b : &mut [u8], v : u32) {
     b[3] = v as u8;
 }
 
+pub fn hmac_sha1(key: &[u8], msg : &[u8]) -> [u8; 20] {
+    let mut key = key;
+    let new_key;
+    if key.len() > 64 {
+       new_key = sha1(key);
+       key = &new_key;
+    }
+    let mut ipad = [0x36u8; 64];
+    let mut opad = [0x5cu8; 64];
+    for i in 0..key.len() {
+        ipad[i] ^= key[i];
+        opad[i] ^= key[i];
+    }
+    for i in key.len()..64 {
+        ipad[i] ^= 0;
+        opad[i] ^= 0;
+    }
+
+    let mut v = ipad.to_vec();
+    v.extend_from_slice(&msg);
+    let h1 = sha1(&v);
+
+    let mut v = opad.to_vec();
+    v.extend_from_slice(&h1);
+    sha1(&v)
+}
+
 #[cfg(test)]
 mod tests {
-    use std::fs;
+
     #[test]
     fn test_sha1() {
         assert_eq!(super::sha1(b"hello"), [0xaa, 0xf4, 0xc6, 0x1d, 0xdc, 0xc5, 0xe8, 0xa2, 0xda, 0xbe, 0xde, 0xf, 0x3b, 0x48, 0x2c, 0xd9, 0xae, 0xa9, 0x43, 0x4d]);
 
+    }
+
+    #[test]
+    fn test_hmac_sha1() {
+       assert_eq!(super::hmac_sha1(b"hello", b"hello"), [0x9a, 0xde, 0x18, 0xf3, 0xe0, 0xee, 0x81, 0xa5, 0x34, 0x3f, 0x4a, 0x0, 0x5f, 0x79, 0x5d, 0xba, 0xf9, 0xce, 0xef, 0xd8]);
     }
 }

@@ -63,7 +63,6 @@ pub fn decode(s :&str) -> Vec<u8> {
     for b in rv {
         let need = 8 - sm;
         if need >= 5 {
-            let old = rrv[si];
             rrv[si] = rrv[si] | (b << (3-sm));
             sm += 5;
         } else {
