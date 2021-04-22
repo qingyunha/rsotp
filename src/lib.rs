@@ -58,6 +58,61 @@ impl OTP {
     }
 }
 
+struct TOTP {
+    otp : OTP,
+    interval: u64,
+}
+
+impl TOTP {
+
+    fn new(secret: String) -> TOTP {
+        TOTP {
+            otp : OTP::new(secret),
+            interval: 30,
+        }
+    }
+
+    fn at(&self, timestamp: u64) -> String {
+        self.otp.generate_otp(timestamp / self.interval)
+    }
+
+    fn now(&self) -> String {
+        use std::time::SystemTime;
+        self.at(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap().as_secs()
+        )
+    }
+
+    fn verfiy(&self, s : &str) -> bool {
+        self.now().eq(s)
+    }
+}
+
+struct HOTP {
+    otp : OTP,
+    init_count: u64,
+}
+
+impl HOTP {
+
+    fn new(secret: String) -> HOTP {
+        HOTP {
+            otp : OTP::new(secret),
+            init_count: 0,
+        }
+    }
+
+    fn at(&self, count: u64) -> String {
+        self.otp.generate_otp(self.init_count + count)
+    }
+
+    fn verfiy(&self, s : &str, count : u64) -> bool {
+        self.at(count).eq(&s)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -66,5 +121,11 @@ mod tests {
         assert_eq!(otp.generate_otp(123), "276083");
         assert_eq!(otp.generate_otp(0), "463950");
         assert_eq!(otp.generate_otp(9), "003954");
+    }
+
+    #[test]
+    fn test_totp() {
+        let otp = super::TOTP::new(String::from("3O75UXLUVM5NE3HA"));
+        println!("{}", otp.now())
     }
 }
