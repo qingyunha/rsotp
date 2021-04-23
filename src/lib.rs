@@ -1,20 +1,16 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-
 mod base32;
 mod sha1;
 
-struct OTP {
+pub struct OTP {
     secret: String,
     digits: u8,
-    digest: String,
-    name: String,
-    issuer: String,
+    #[allow(dead_code)] digest: String,
+    #[allow(dead_code)] name: String,
+    #[allow(dead_code)] issuer: String,
 }
 
 impl OTP {
-    fn new(secret: String) -> OTP {
+    pub fn new(secret: String) -> OTP {
         OTP {
             secret: secret,
             digits: 6,
@@ -24,7 +20,7 @@ impl OTP {
         }
     }
 
-    fn generate_otp(&self, input: u64) -> String {
+    pub fn generate_otp(&self, input: u64) -> String {
         let h = sha1::hmac_sha1(&self.byte_secret(), &self.int_to_bytes(input));
         let offset = h[19] as usize & 0x0f;
         let code = (h[offset] as u32 & 0x7f) << 24 |
@@ -58,25 +54,25 @@ impl OTP {
     }
 }
 
-struct TOTP {
+pub struct TOTP {
     otp : OTP,
     interval: u64,
 }
 
 impl TOTP {
 
-    fn new(secret: String) -> TOTP {
+    pub fn new(secret: String) -> TOTP {
         TOTP {
             otp : OTP::new(secret),
             interval: 30,
         }
     }
 
-    fn at(&self, timestamp: u64) -> String {
+    pub fn at(&self, timestamp: u64) -> String {
         self.otp.generate_otp(timestamp / self.interval)
     }
 
-    fn now(&self) -> String {
+    pub fn now(&self) -> String {
         use std::time::SystemTime;
         self.at(
             SystemTime::now()
@@ -85,30 +81,30 @@ impl TOTP {
         )
     }
 
-    fn verfiy(&self, s : &str) -> bool {
+    pub fn verfiy(&self, s : &str) -> bool {
         self.now().eq(s)
     }
 }
 
-struct HOTP {
+pub struct HOTP {
     otp : OTP,
     init_count: u64,
 }
 
 impl HOTP {
 
-    fn new(secret: String) -> HOTP {
+    pub fn new(secret: String) -> HOTP {
         HOTP {
             otp : OTP::new(secret),
             init_count: 0,
         }
     }
 
-    fn at(&self, count: u64) -> String {
+    pub fn at(&self, count: u64) -> String {
         self.otp.generate_otp(self.init_count + count)
     }
 
-    fn verfiy(&self, s : &str, count : u64) -> bool {
+    pub fn verfiy(&self, s : &str, count : u64) -> bool {
         self.at(count).eq(&s)
     }
 }

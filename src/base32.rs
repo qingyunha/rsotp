@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub fn encode(s: &str) -> Vec<u8> {
     let b32aplphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".as_bytes();
     let sp = s.as_bytes();
