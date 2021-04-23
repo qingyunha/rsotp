@@ -3,6 +3,8 @@ name = "rsotp"
 version = "0.1.0"
 authors = ["Tao Qingyun <taoqy@ls-a.me>"]
 edition = "2018"
+description = "A Rust library for generating and verifying one-time passwords"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
