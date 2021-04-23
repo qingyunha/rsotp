@@ -4,9 +4,12 @@ mod sha1;
 pub struct OTP {
     secret: String,
     digits: u8,
-    #[allow(dead_code)] digest: String,
-    #[allow(dead_code)] name: String,
-    #[allow(dead_code)] issuer: String,
+    #[allow(dead_code)]
+    digest: String,
+    #[allow(dead_code)]
+    name: String,
+    #[allow(dead_code)]
+    issuer: String,
 }
 
 impl OTP {
@@ -23,10 +26,10 @@ impl OTP {
     pub fn generate_otp(&self, input: u64) -> String {
         let h = sha1::hmac_sha1(&self.byte_secret(), &self.int_to_bytes(input));
         let offset = h[19] as usize & 0x0f;
-        let code = (h[offset] as u32 & 0x7f) << 24 |
-            (h[offset + 1] as u32 & 0xff) << 16 |
-            (h[offset + 2] as u32 & 0xff) << 8 |
-            (h[offset + 3] as u32 & 0xff);
+        let code = (h[offset] as u32 & 0x7f) << 24
+            | (h[offset + 1] as u32 & 0xff) << 16
+            | (h[offset + 2] as u32 & 0xff) << 8
+            | (h[offset + 3] as u32 & 0xff);
         let code = code % 10u32.pow(self.digits as u32);
         let mut r = code.to_string();
         let pending = ['0' as u8; 10];
@@ -55,15 +58,14 @@ impl OTP {
 }
 
 pub struct TOTP {
-    otp : OTP,
+    otp: OTP,
     interval: u64,
 }
 
 impl TOTP {
-
     pub fn new(secret: String) -> TOTP {
         TOTP {
-            otp : OTP::new(secret),
+            otp: OTP::new(secret),
             interval: 30,
         }
     }
@@ -74,28 +76,26 @@ impl TOTP {
 
     pub fn now(&self) -> String {
         use std::time::SystemTime;
-        self.at(
-            SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap().as_secs()
-        )
+        self.at(SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs())
     }
 
-    pub fn verfiy(&self, s : &str) -> bool {
+    pub fn verfiy(&self, s: &str) -> bool {
         self.now().eq(s)
     }
 }
 
 pub struct HOTP {
-    otp : OTP,
+    otp: OTP,
     init_count: u64,
 }
 
 impl HOTP {
-
     pub fn new(secret: String) -> HOTP {
         HOTP {
-            otp : OTP::new(secret),
+            otp: OTP::new(secret),
             init_count: 0,
         }
     }
@@ -104,7 +104,7 @@ impl HOTP {
         self.otp.generate_otp(self.init_count + count)
     }
 
-    pub fn verfiy(&self, s : &str, count : u64) -> bool {
+    pub fn verfiy(&self, s: &str, count: u64) -> bool {
         self.at(count).eq(&s)
     }
 }
